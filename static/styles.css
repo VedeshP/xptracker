@@ -95,8 +95,17 @@ body {
 }
 
 .grid-item:hover {
-    transform: scale(1.05);
+    transform: scale(1.50);
     background-color: transparent; /* Maintain transparency on hover */
+}
+
+.social-icons {
+    transition: transform 0.3s;
+    margin: auto;
+}
+
+.social-icons:hover {
+    transform: scale(1.05);
 }
 
 .custom-button {
