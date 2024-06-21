@@ -22,6 +22,22 @@ db = SQLAlchemy(app)
 hello = dummy_func()
 print(hello)
 
-@app.route("/")
+@app.route("/", methods = ["GET", "POST"])
 def index():
-    return render_template("layout.html", login=True)
+    return render_template("index.html.html", login=True)
+
+
+@app.route("/login", methods = ["GET", "POST"])
+def login():
+    if request.method == "POST":
+        ...
+    else:
+        return render_template("login.html", login=False)
+
+
+@app.route("/signup", methods = ["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        ...
+    else:
+        return render_template("signup.html", login=False)
