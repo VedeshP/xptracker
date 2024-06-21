@@ -17,9 +17,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///xptracker.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# Do not forget to set secret key
+
 hello = dummy_func()
 print(hello)
 
 @app.route("/")
 def index():
-    return "Hello, this is xptracker"
+    return render_template("layout.html", login=True)
