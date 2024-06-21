@@ -56,6 +56,49 @@ body {
     color: var(--page-bg-opp);
 }
 
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 20px;
+    width: 80%;
+    max-width: 600px;
+    margin: auto;
+    margin-top: 60px; /* Adjust as needed for spacing from the navbar */
+}
+
+.grid-item {
+    background-color: transparent; /* Transparent background */
+    border: none;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.3s;
+    text-align: center;
+}
+
+.grid-item-link {
+    text-decoration: none; /* Removes underline from the links */
+}
+
+.grid-item svg {
+    width: 100%;
+    height: auto;
+}
+
+.grid-item .description {
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--page-bg-opp);
+}
+
+.grid-item:hover {
+    transform: scale(1.05);
+    background-color: transparent; /* Maintain transparency on hover */
+}
+
 .custom-button {
     border-radius: var(--default-border-radius);
     border-width: 0px;

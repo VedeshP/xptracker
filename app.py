@@ -24,7 +24,7 @@ print(hello)
 
 @app.route("/", methods = ["GET", "POST"])
 def index():
-    return render_template("index.html.html", login=True)
+    return render_template("index.html", login=True)
 
 
 @app.route("/login", methods = ["GET", "POST"])
@@ -41,3 +41,23 @@ def signup():
         ...
     else:
         return render_template("signup.html", login=False)
+
+    
+@app.route("/add-expenses", methods=["GET", "POST"])
+def add_expense():
+    ...
+
+
+@app.route("/view-expenses", methods=["GET", "POST"])
+def view_expenses():
+    ...
+
+
+@app.route("/add-earning", methods=["GET", "POST"])
+def add_earning():
+    ...
+
+
+@app.route("/set-budget", methods=["GET", "POST"])
+def set_budget():
+    ...
