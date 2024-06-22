@@ -99,6 +99,21 @@ body {
     background-color: transparent; /* Maintain transparency on hover */
 }
 
+.centered-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.centered-item {
+    width: auto; /* Override width setting for the centered item if needed */
+}
+
 .social-icons {
     transition: transform 0.3s;
     margin: auto;
