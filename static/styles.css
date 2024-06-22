@@ -3,6 +3,7 @@
     --black-color: #000000;
     --night: #121212;
     --white-color: #FFFFFF;
+    --biege: #F7F7DE;
     --vanilla: #EBEBAD;
     --orange: #E53D00;
     --light-blue: #2892D7;
@@ -13,7 +14,7 @@
 }
 
 :root[data-theme="light"] {
-    --page-bg: var(--white-color);
+    --page-bg: var(--biege);
     --page-bg-opp: var(--dark-bg-blue);
     --hover-color: var(--orange);
     --text-color: var(--page-bg-opp);
@@ -91,7 +92,6 @@ body {
 .grid-item .description {
     margin-top: 10px;
     font-size: 14px;
-    color: var(--page-bg-opp);
 }
 
 .grid-item:hover {
@@ -105,7 +105,7 @@ body {
 }
 
 .social-icons:hover {
-    transform: scale(1.05);
+    transform: scale(1.50);
 }
 
 .custom-button {
@@ -535,8 +535,8 @@ h5 {
     color: var(--hover-color);
 }
 
-.improov-text {
-    color: var(--primary-color);
+.xpt-text {
+    color: var(--light-blue);
 }
 
 .responsive-img {
