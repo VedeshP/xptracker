@@ -9,18 +9,25 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import datetime
 
+import sqlitecloud
+
 from helpers import dummy_func
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///xptracker.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///xptracker.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# db = SQLAlchemy(app)
 
 # Do not forget to set secret key
 
+
+db = sqlitecloud.connect("")
+
+
 hello = dummy_func()
 print(hello)
+
 
 @app.route("/", methods = ["GET", "POST"])
 def index():
@@ -61,3 +68,15 @@ def add_earning():
 @app.route("/set-budget", methods=["GET", "POST"])
 def set_budget():
     ...
+
+
+@app.route("/testing")
+def testing():
+    query_to_get_sbcat = "SELECT * FROM sub_category"
+    rows = db.execute(query_to_get_sbcat).fetchall()
+    # rows = rows_db.fetchall()
+    # Get the column names
+    column_names = [desc[0] for desc in db.execute(query_to_get_sbcat).description]
+    modified_rows = [dict(zip(column_names, row)) for row in rows]
+    # modified_rows = [dict(row._mapping) for row in rows]
+    return jsonify(modified_rows)
