@@ -260,9 +260,18 @@ body {
 .form-control {
     background-color: var(--page-bg);
     border-color: var(--primary-color);
+    color: var(--page-bg-opp);
+    border: 1px solid;
+    border-color: var(--light-blue);
+}
+
+.form-check-label {
     color: var(--page-bg-opp)
 }
 
+.form-check {
+    margin-top: 30px;
+}
 
 .form-control:focus, .form-control:active {
     background-color: var(--page-bg);
@@ -270,6 +279,11 @@ body {
     color: var(--page-bg-opp);  /* Adding this to ensure text color is set */
     box-shadow: 0 0 0 0.2rem var(--hover-color);  /* Adding a custom focus shadow */
 }
+
+.form-control:disabled .form-control:read-only {
+    background-color: var(--page-bg);
+}
+
 
 /* Ensuring the floating labels also conform to dark theme */
 .form-floating > label {
