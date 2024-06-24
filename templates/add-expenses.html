@@ -37,10 +37,8 @@
         <select class="form-control" id="customCategory" name="custom_category" disabled>
             <option disabled selected>Select Custom Category</option>
             {% for row in uc_rows %}
-            <option value="">Investment</option>
+            <option value="{{ row.id }}">{{ row.category }} ({{ row.type }}) </option>
             {% endfor %}
-            <option value="2">Entertainment</option>
-            <option value="3">Savings</option>
         </select>
     </div>
     <div class="form-group">

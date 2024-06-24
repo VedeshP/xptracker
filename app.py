@@ -1,5 +1,6 @@
 import os
 import json
+from contextlib import contextmanager
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
@@ -11,7 +12,7 @@ import datetime
 
 import sqlitecloud
 
-from helpers import dummy_func
+from helpers import login_required, check_password_strength_basic
 
 app = Flask(__name__)
 
@@ -22,7 +23,22 @@ app = Flask(__name__)
 # Do not forget to set secret key
 
 
-db = sqlitecloud.connect("")
+@app.after_request
+def after_request(response):
+    """Ensure responses aren't cached"""
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Expires"] = 0
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+
+@contextmanager
+def get_db_connection():
+    db = sqlitecloud.connect("sqlitecloud://your_host_url:port?apikey=your_apikey")
+    try:
+        yield db  # Setup: Provide the connection to the block
+    finally:
+        db.close()  # Teardown: Close the connection after the block
 
 
 hello = dummy_func()
@@ -44,8 +60,47 @@ def login():
 
 @app.route("/signup", methods = ["GET", "POST"])
 def signup():
+    """Register user"""
+    # Forget any user_id
+    session.clear()
+
     if request.method == "POST":
-        ...
+        username = request.form.get("username")
+        username = username.strip().lower()
+        display_name = request.form.get("display_name")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+
+        for i in username:
+            if i == ' ':
+                return apology("username must not contain space", 400)
+        if not username:
+            return apology("Must provide username", 400)
+        if not display_name:
+            return apology("Must provide Display Name", 400)
+        if not email:
+            return apology("Please provide Email Id", 400)
+        if not password:
+            return apology("Please set a password", 400)
+        if not confirm_password:
+            return apology("Must confirm password", 400)
+        if password != confirm_password:
+            return apology("Both password must be same", 403)
+
+        if check_password_strength_basic(password):
+            return apology("Password must contain atleast 8 characters, a special character, letters and numbers", 403)
+        
+        # Get password hash to store in the database
+        hash = generate_password_hash(password)
+
+        with get_db_connection() as db:
+            db.execute("BEGIN")
+            db.execute(
+                """
+                INSERT INTO users ()
+                """
+            )
     else:
         return render_template("signup.html", login=False)
 
@@ -67,15 +122,17 @@ def add_expense():
         """
         uc_query = "SELECT * FROM user_category WHERE user_id = ?"
 
-        mc = db.execute(mc_query).fetchall()
-        mc_columns = [desc[0] for desc in db.execute(mc_query).description]
-        mc_rows = [dict(zip(mc_columns, row)) for row in mc]    
-        sc = db.execute(sc_query).fetchall()
-        sc_columns = [desc[0] for desc in db.execute(sc_query).description]
-        sc_rows = [dict(zip(sc_columns, row)) for row in sc]    
-        uc = db.execute(uc_query, (user_id,)).fetchall()
-        uc_columns = [desc[0] for desc in db.execute(uc_query, (user_id,)).description]
-        uc_rows = [dict(zip(uc_columns, row) for row in uc)]
+        with get_db_connection() as db:
+            mc = db.execute(mc_query).fetchall()
+            mc_columns = [desc[0] for desc in db.execute(mc_query).description]
+            mc_rows = [dict(zip(mc_columns, row)) for row in mc]    
+            sc = db.execute(sc_query).fetchall()
+            sc_columns = [desc[0] for desc in db.execute(sc_query).description]
+            sc_rows = [dict(zip(sc_columns, row)) for row in sc]    
+            uc = db.execute(uc_query, (user_id,)).fetchall()
+            uc_columns = [desc[0] for desc in db.execute(uc_query, (user_id,)).description]
+            uc_rows = [dict(zip(uc_columns, row) for row in uc)]
+
         return render_template("add-expenses.html", uc_rows=uc_rows, mc_rows=mc_rows, sc_rows=sc_rows)
 
 
