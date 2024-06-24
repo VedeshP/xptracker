@@ -37,7 +37,7 @@
                     <img src="/static/improov.svg" alt="XPT" width="64" height="64" class="improov-icon">
                 </a>
                 
-                {% if login %}
+                {% if session["user_id"] %}
                 <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>

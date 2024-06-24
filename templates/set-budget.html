@@ -5,4 +5,70 @@
 {% endblock %}
 
 {% block main %}
+<h2 class="mb-4">Set Budget</h2>
+<form method="post" action="/set-budget">
+    <div class="form-group">
+        <label for="amount" class="form-label">Amount</label>
+        <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+    </div>
+    <div class="form-group">
+        <label for="period_type" class="form-label">Period Type</label>
+        <select class="form-control" id="period_type" name="period_type" required>
+            <option disabled selected>Select period type</option>
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="yearly">Yearly</option>
+        </select>
+    </div>
+    <div class="form-group" id="period_group">
+        <label for="period" class="form-label">Period</label>
+        <select class="form-control" id="period" name="period" required>
+            <option value="">Select period</option>
+            <!-- Options will be dynamically updated based on period type -->
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="period_year" class="form-label">Year</label>
+        <input type="number" class="form-control" id="period_year" name="period_year">
+    </div>
+    <div><p>If you do not add an year the current year will be selected</p></div>
+    <button type="submit" class="btn btn-primary">Set Budget</button>
+</form>
+</div>
+<script>
+document.getElementById('period_type').addEventListener('change', function() {
+    const periodType = this.value;
+    const periodSelect = document.getElementById('period');
+    periodSelect.innerHTML = ''; // Clear existing options
+
+    if (periodType === 'monthly') {
+        const months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        months.forEach((month, index) => {
+            const option = document.createElement('option');
+            option.value = index + 1;
+            option.text = month;
+            periodSelect.appendChild(option);
+        });
+    } else if (periodType === 'quarterly') {
+        const quarters = ["Quarter 1", "Quarter 2", "Quarter 3", "Quarter 4"];
+        quarters.forEach((quarter, index) => {
+            const option = document.createElement('option');
+            option.value = index + 1;
+            option.text = quarter;
+            periodSelect.appendChild(option);
+        });
+    } else if (periodType === 'yearly') {
+        const option = document.createElement('option');
+        option.value = 0;
+        option.text = 'Yearly';
+        periodSelect.appendChild(option);
+    }
+});
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script
 {% endblock %}

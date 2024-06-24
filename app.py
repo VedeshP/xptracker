@@ -45,8 +45,14 @@ def get_db_connection():
 
 
 @app.route("/", methods = ["GET", "POST"])
+@login_required
 def index():
-    return render_template("index.html", login=True)
+    user_id = session["user_id"]
+    with get_db_connection() as db:
+        rows = db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    rows = [list(row) for row in rows]
+    display_name = rows[0][4]
+    return render_template("index.html", display_name=display_name)
 
 
 @app.route("/login", methods = ["GET", "POST"])
@@ -78,10 +84,23 @@ def login():
             rows[0][2], password 
         ):
             return apology("invalid username and/or password", 403)
-        return jsonify(rows)
+        
+        # Remember which user has logged in
+        session["user_id"] = rows[0][0]
+
+        # Redirect user to home page
+        return redirect("/")
 
     else:
-        return render_template("login.html", login=False)
+        return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    """Log User out"""
+    # Forget user
+    session.clear()
+    return redirect("/know-more")
 
 
 @app.route("/signup", methods = ["GET", "POST"])
@@ -120,11 +139,10 @@ def signup():
         
         # Get password hash to store in the database
         hash = generate_password_hash(password)
-
-        try:
+        with get_db_connection() as db:
+            try:
             # Register user 
             # Add user details to the database
-            with get_db_connection() as db:
                 db.execute("BEGIN")
                 db.execute(
                     """
@@ -134,28 +152,82 @@ def signup():
                     (username, hash, email, display_name)
                 )
                 db.execute("COMMIT")
-        except Exception as e:
-            # Rollback execution on error
-            db.execute("ROLLBACK")
-            error_message = str(e)
-            if "UNIQUE constraint failed: users.username" in error_message:
-                return apology("Username already exists")
-            elif "UNIQUE constraint failed: users.email_id" in error_message:
-                return apology("Email ID already exists")
-            else:
-                return apology("An integrity error occurred: " + error_message)
+            except Exception as e:
+                # Rollback execution on error
+                db.execute("ROLLBACK")
+                error_message = str(e)
+                if "UNIQUE constraint failed: users.username" in error_message:
+                    return apology("Username already exists")
+                elif "UNIQUE constraint failed: users.email_id" in error_message:
+                    return apology("Email ID already exists")
+                else:
+                    return apology("An integrity error occurred: " + error_message)
+
         flash("Signed Up! Login to Proceed")
         return redirect(url_for('login'))
     else:
-        return render_template("signup.html", login=False)
+        return render_template("signup.html")
 
     
 @app.route("/add-expenses", methods=["GET", "POST"])
+@login_required
 def add_expense():
-    user_id = 1
-    #user_id = session["user_id"]
+    user_id = session["user_id"]
     if request.method == "POST":
-        ...
+
+        # Retrieve form data
+        amount = request.form.get("amount")
+        date = request.form.get("date")
+        main_category = request.form.get("main_category")
+        sub_category_check = request.form.get("sub_category_check")
+        sub_category = request.form.get("sub_category")
+        custom_category_check = request.form.get("custom_category_check")
+        custom_category = request.form.get("custom_category")
+        expense_description = request.form.get("description")
+
+        # Validate form data
+        if not custom_category_check and not main_category:
+            return apology("Must select at least main category", 403)
+
+        if sub_category_check and not sub_category:
+            return apology("Do you want to select a sub category?", 403)
+
+        if custom_category_check and not custom_category:
+            return apology("Must add Custom Category", 403)
+
+        if not amount:
+            return apology("Must add amount", 403)
+
+        if not date:
+            return apology("Must add date", 403)
+
+        # Handle optional sub_category and custom_category
+        if not sub_category_check:
+            sub_category = None
+
+        if not custom_category_check:
+            custom_category = None
+        if not expense_description:
+            expense_description = None
+
+        with get_db_connection() as db:
+            try:
+                db.execute("BEGIN")
+                db.execute(
+                    """
+                    INSERT INTO expenses 
+                    (user_id, main_category_id, sub_category_id, user_category_id, amount, date, expense_description)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (user_id, main_category, sub_category, custom_category, amount, date, expense_description)
+                )
+                db.execute("COMMIT")
+            except Exception as e:
+                db.execute("ROLLBACK")
+                return apology("An error occured")
+            
+            return redirect(url_for('add_expense'))
+
     else:
         # mc - main category 
         mc_query = "SELECT * FROM main_category"
@@ -182,18 +254,89 @@ def add_expense():
 
 
 @app.route("/view-expenses", methods=["GET", "POST"])
+@login_required
 def view_expenses():
     ...
 
 
 @app.route("/add-earning", methods=["GET", "POST"])
+@login_required
 def add_earning():
-    ...
+    user_id = session["user_id"]
+    if request.method == "POST":
+        amount = request.form.get("amount")
+        date = request.form.get("date")
+        description = request.form.get("description")
+        source = request.form.get("source")
+
+        if not amount:
+            return apology("Enter an Amount", 403)
+        if not date:
+            return apology("Enter an Date", 403)
+        with get_db_connection() as db:
+            try:
+                db.execute("BEGIN")
+                db.execute(
+                    """
+                    INSERT INTO earnings 
+                    (user_id, amount, date, description, source)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (user_id, amount, date, description, source)
+                )
+                db.execute("COMMIT")
+            except Exception as e:
+                db.execute("ROLLBACK")        
+            return apology(f"An error occured {str(e)}")
+        
+        return redirect("/")
+
+    else:
+        return render_template("add-earning.html")
 
 
 @app.route("/set-budget", methods=["GET", "POST"])
+@login_required
 def set_budget():
-    ...
+    user_id = session["user_id"]
+    if request.method == "POST":
+        amount = request.form.get("amount")
+        period_type = request.form.get("period_type")
+        period = request.form.get("period")
+        period_year = request.form.get("period_year")
+
+        if not period_year:
+            period_year = datetime.datetime.now().year
+        if not amount:
+            return apology("Must add amount", 403)
+        if not period_type:
+            return apology("Must add period type", 403)
+        if not period:
+            return apology("Must add period", 403)
+        with get_db_connection() as db:
+            try:
+                db.execute("BEGIN")
+                db.execute(
+                    """
+                    INSERT INTO budget
+                    (user_id, amount, period_type, period_year, period)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (user_id, amount, period_type, period_year, period)
+                )
+                db.execute("COMMIT")
+            except Exception as e:
+                db.execute("ROLLBACK")
+                return apology("An error occured")
+        return redirect("/")
+
+    else:
+        return render_template("set-budget.html")
+
+
+@app.route("/know-more")
+def know_more():
+    return render_template("know-more.html")
 
 
 @app.route("/testing")
