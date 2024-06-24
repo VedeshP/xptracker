@@ -12,7 +12,7 @@ import datetime
 
 import sqlitecloud
 
-from helpers import login_required, check_password_strength_basic
+from helpers import login_required, check_password_strength_basic, apology
 
 app = Flask(__name__)
 
@@ -20,8 +20,11 @@ app = Flask(__name__)
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # db = SQLAlchemy(app)
 
-# Do not forget to set secret key
-
+# Get the secret key from an environment variable
+# app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = 'trial-secret-key-123'
+# Also add login required deocrator on required routes/functions
+# Add know more, about us and updates templates
 
 @app.after_request
 def after_request(response):
@@ -34,7 +37,7 @@ def after_request(response):
 
 @contextmanager
 def get_db_connection():
-    db = sqlitecloud.connect("sqlitecloud://your_host_url:port?apikey=your_apikey")
+    db = sqlitecloud.connect("")
     try:
         yield db  # Setup: Provide the connection to the block
     finally:
@@ -48,8 +51,35 @@ def index():
 
 @app.route("/login", methods = ["GET", "POST"])
 def login():
+    """Log user in"""
+
+    # Forget any user_id
+    session.clear()
+
     if request.method == "POST":
-        ...
+        # Get details from the form
+        username = request.form.get("username")
+        username = username.strip()
+        password = request.form.get("password")
+        # Ensure username was submitted
+        if not username:
+            return apology("Must provide username", 403)
+
+        # Ensure password was submitted
+        elif not password:
+            return apology("Must provide password", 403)
+
+        with get_db_connection() as db:
+            rows = db.execute("SELECT * FROM  users where username = ?", (username,))
+        rows = [list(row) for row in rows]
+
+        # Ensure username exists and password is correct
+        if len(rows) != 1 or not check_password_hash(
+            rows[0][2], password 
+        ):
+            return apology("invalid username and/or password", 403)
+        return jsonify(rows)
+
     else:
         return render_template("login.html", login=False)
 
@@ -62,9 +92,10 @@ def signup():
 
     if request.method == "POST":
         username = request.form.get("username")
-        username = username.strip().lower()
+        username = username.strip()
         display_name = request.form.get("display_name")
         email = request.form.get("email")
+        email = email.strip()
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
 
@@ -90,13 +121,31 @@ def signup():
         # Get password hash to store in the database
         hash = generate_password_hash(password)
 
-        with get_db_connection() as db:
-            db.execute("BEGIN")
-            db.execute(
-                """
-                INSERT INTO users ()
-                """
-            )
+        try:
+            # Register user 
+            # Add user details to the database
+            with get_db_connection() as db:
+                db.execute("BEGIN")
+                db.execute(
+                    """
+                    INSERT INTO users (username, password, email, display_name)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (username, hash, email, display_name)
+                )
+                db.execute("COMMIT")
+        except Exception as e:
+            # Rollback execution on error
+            db.execute("ROLLBACK")
+            error_message = str(e)
+            if "UNIQUE constraint failed: users.username" in error_message:
+                return apology("Username already exists")
+            elif "UNIQUE constraint failed: users.email_id" in error_message:
+                return apology("Email ID already exists")
+            else:
+                return apology("An integrity error occurred: " + error_message)
+        flash("Signed Up! Login to Proceed")
+        return redirect(url_for('login'))
     else:
         return render_template("signup.html", login=False)
 
