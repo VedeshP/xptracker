@@ -41,10 +41,6 @@ def get_db_connection():
         db.close()  # Teardown: Close the connection after the block
 
 
-hello = dummy_func()
-print(hello)
-
-
 @app.route("/", methods = ["GET", "POST"])
 def index():
     return render_template("index.html", login=True)
