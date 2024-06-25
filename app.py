@@ -258,7 +258,12 @@ def add_expense():
 @login_required
 def view_expenses():
     if request.method == "POST":
-        ...
+        period_type = request.form.get("period_type")
+        period_year = int(request.form.get("period_year"))
+        period = int(request.form.get("period"))
+
+
+
         return render_template("view-expenses.html")
     else:
         return render_template("expense-filter.html")
