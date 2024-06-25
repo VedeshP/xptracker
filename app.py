@@ -176,7 +176,7 @@ def add_expense():
     if request.method == "POST":
 
         # Retrieve form data
-        amount = int(request.form.get("amount"))
+        amount = request.form.get("amount")
         date = request.form.get("date")
         main_category = request.form.get("main_category")
         sub_category_check = request.form.get("sub_category_check")
@@ -210,6 +210,8 @@ def add_expense():
         if not expense_description:
             expense_description = None
 
+        amount = int(amount)
+
         with get_db_connection() as db:
             try:
                 db.execute("BEGIN")
@@ -226,6 +228,7 @@ def add_expense():
                 db.execute("ROLLBACK")
                 return apology("An error occured")
             
+            flash("Expense Added")
             return redirect(url_for('add_expense'))
 
     else:
@@ -296,23 +299,38 @@ def view_expenses():
                 params = (user_id, str(period_year))
             
             detailed_expenses = db.execute(query, params).fetchall()
+            column_names_d_e = [desc[0] for desc in db.execute(query, params).description]
+            detailed_expenses_dict = [dict(zip(column_names_d_e, row)) for row in detailed_expenses]
 
             # Query for total expenses by category
             query = """
-                SELECT mc.category AS category, SUM(e.amount) AS total
-                FROM expenses e
-                LEFT JOIN main_category mc ON e.main_category_id = mc.id
-                WHERE e.user_id = ? AND strftime('%Y', e.date) = ?
+                SELECT category, SUM(amount) AS total FROM (
+                    SELECT mc.category AS category, e.amount
+                    FROM expenses e
+                    LEFT JOIN main_category mc ON e.main_category_id = mc.id
+                    WHERE e.user_id = ? AND strftime('%Y', e.date) = ?
+                    {period_condition}
+                UNION ALL
+                    SELECT uc.category AS category, e.amount
+                    FROM expenses e
+                    LEFT JOIN user_category uc ON e.user_category_id = uc.id
+                    WHERE e.user_id = ? AND strftime('%Y', e.date) = ?
+                    {period_condition}
+                )
+                GROUP BY category
             """
+
             if period_type == 'monthly':
-                query += " AND strftime('%m', e.date) = ? GROUP BY mc.category"
-                params = (user_id, str(period_year), str(period).zfill(2))
+                period_condition = "AND strftime('%m', e.date) = ?"
+                params = (user_id, str(period_year), str(period).zfill(2), user_id, str(period_year), str(period).zfill(2))
             elif period_type == 'quarterly':
-                query += " AND (strftime('%m', e.date) IN (?, ?, ?)) GROUP BY mc.category"
-                params = (user_id, str(period_year), *months[period])
+                period_condition = "AND (strftime('%m', e.date) IN (?, ?, ?))"
+                params = (user_id, str(period_year), *months[period], user_id, str(period_year), *months[period])
             elif period_type == 'yearly':
-                query += " GROUP BY mc.category"
-                params = (user_id, str(period_year))
+                period_condition = ""
+                params = (user_id, str(period_year), user_id, str(period_year))
+
+            query = query.format(period_condition=period_condition)
 
             category_summary = db.execute(query, params).fetchall()
             column_names_c_summary = [desc[0] for desc in db.execute(query, params).description]
@@ -320,26 +338,38 @@ def view_expenses():
             for row in category_summary_dict:
                 row['total'] = int(row['total'])
 
-            return jsonify(category_summary_dict)
+            # return jsonify(category_summary_dict)
 
             # Query for total expenses by type
             query = """
-                SELECT mc.type AS type, SUM(e.amount) AS total
+                SELECT 
+                    COALESCE(mc.type, uc.type) AS category_type, 
+                    SUM(e.amount) AS total 
                 FROM expenses e
                 LEFT JOIN main_category mc ON e.main_category_id = mc.id
+                LEFT JOIN user_category uc ON e.user_category_id = uc.id
                 WHERE e.user_id = ? AND strftime('%Y', e.date) = ?
+                {period_condition}
+                GROUP BY category_type
             """
+
             if period_type == 'monthly':
-                query += " AND strftime('%m', e.date) = ? GROUP BY mc.type"
+                period_condition = "AND strftime('%m', e.date) = ?"
                 params = (user_id, str(period_year), str(period).zfill(2))
             elif period_type == 'quarterly':
-                query += " AND (strftime('%m', e.date) IN (?, ?, ?)) GROUP BY mc.type"
+                period_condition = "AND (strftime('%m', e.date) IN (?, ?, ?))"
                 params = (user_id, str(period_year), *months[period])
             elif period_type == 'yearly':
-                query += " GROUP BY mc.type"
+                period_condition = ""
                 params = (user_id, str(period_year))
 
+            query = query.format(period_condition=period_condition)
+
             type_summary = db.execute(query, params).fetchall()
+            column_names_t_summary = [desc[0] for desc in db.execute(query, params).description]
+            type_summary_dict = [dict(zip(column_names_t_summary, row)) for row in type_summary]
+
+            return jsonify(type_summary_dict)
 
             # Query for budget
             budget_query = """
@@ -415,7 +445,7 @@ def add_category():
 def add_earning():
     user_id = session["user_id"]
     if request.method == "POST":
-        amount = int(request.form.get("amount"))
+        amount = request.form.get("amount")
         date = request.form.get("date")
         description = request.form.get("description")
         source = request.form.get("source")
@@ -424,6 +454,8 @@ def add_earning():
             return apology("Enter an Amount", 403)
         if not date:
             return apology("Enter an Date", 403)
+
+        amount = int(amount)
         with get_db_connection() as db:
             try:
                 db.execute("BEGIN")
@@ -438,7 +470,7 @@ def add_earning():
                 db.execute("COMMIT")
             except Exception as e:
                 db.execute("ROLLBACK")        
-            return apology(f"An error occured {str(e)}")
+                return apology(f"An error occured {str(e)}")
         
         return redirect("/")
 
@@ -451,7 +483,7 @@ def add_earning():
 def set_budget():
     user_id = session["user_id"]
     if request.method == "POST":
-        amount = int(request.form.get("amount"))
+        amount = request.form.get("amount")
         period_type = request.form.get("period_type")
         period = request.form.get("period")
         period_year = request.form.get("period_year")
@@ -464,6 +496,7 @@ def set_budget():
             return apology("Must add period type", 403)
         if not period:
             return apology("Must add period", 403)
+        amount = int(amount)
         with get_db_connection() as db:
             try:
                 db.execute("BEGIN")
@@ -496,13 +529,22 @@ def analysis():
     return render_template("analysis.html")
 
 
-@app.route("/testing")
-def testing():
-    sub_category_query = "SELECT * FROM sub_category"
-    rows = db.execute(sub_category_query).fetchall()
-    # rows = rows_db.fetchall()
-    # Get the column names
-    column_names = [desc[0] for desc in db.execute(sub_category_query).description]
-    modified_rows = [dict(zip(column_names, row)) for row in rows]
-    # modified_rows = [dict(row._mapping) for row in rows]
-    return jsonify(modified_rows)
+# @app.route("/testing")
+# def testing():
+#     user_id = session["user_id"]
+#     query = "SELECT * FROM expenses WHERE user_id = ?"
+#     with get_db_connection() as db:
+#         rows = db.execute(query, (user_id,)).fetchall()
+#         rows = [list(row) for row in rows]
+#         return jsonify(rows)
+#         column_names = [desc[0] for desc in db.execute(query, (user_id,)).description]
+#         modified_rows = [dict(zip(column_names, row)) for row in rows]
+#     return jsonify(modiefied_rows)
+    # sub_category_query = "SELECT * FROM sub_category"
+    # rows = db.execute(sub_category_query).fetchall()
+    # # rows = rows_db.fetchall()
+    # # Get the column names
+    # column_names = [desc[0] for desc in db.execute(sub_category_query).description]
+    # modified_rows = [dict(zip(column_names, row)) for row in rows]
+    # # modified_rows = [dict(row._mapping) for row in rows]
+    
