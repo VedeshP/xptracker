@@ -176,7 +176,7 @@ def add_expense():
     if request.method == "POST":
 
         # Retrieve form data
-        amount = request.form.get("amount")
+        amount = int(request.form.get("amount"))
         date = request.form.get("date")
         main_category = request.form.get("main_category")
         sub_category_check = request.form.get("sub_category_check")
@@ -257,14 +257,115 @@ def add_expense():
 @app.route("/view-expenses", methods=["GET", "POST"])
 @login_required
 def view_expenses():
+    user_id = session["user_id"]
     if request.method == "POST":
         period_type = request.form.get("period_type")
-        period_year = int(request.form.get("period_year"))
+        period_year = request.form.get("period_year")
+        if period_year:
+            period_year = int(period_year)
+        else:
+            period_year = datetime.datetime.now().year
+
         period = int(request.form.get("period"))
 
+        with get_db_connection() as db:
+            # Query for detailed expenses
+            query = """
+                SELECT e.date, mc.category AS main_category, sc.sub_category, uc.category AS user_category, e.amount, e.expense_description
+                FROM expenses e
+                LEFT JOIN main_category mc ON e.main_category_id = mc.id
+                LEFT JOIN sub_category sc ON e.sub_category_id = sc.id
+                LEFT JOIN user_category uc ON e.user_category_id = uc.id
+                WHERE e.user_id = ?
+            """
+            
+            if period_type == 'monthly':
+                query += " AND strftime('%Y', e.date) = ? AND strftime('%m', e.date) = ?"
+                params = (user_id, str(period_year), str(period).zfill(2))
+            elif period_type == 'quarterly':
+                query += " AND strftime('%Y', e.date) = ? AND (strftime('%m', e.date) IN (?, ?, ?))"
+                months = {
+                    1: ('01', '02', '03'),
+                    2: ('04', '05', '06'),
+                    3: ('07', '08', '09'),
+                    4: ('10', '11', '12')
+                }
+                params = (user_id, str(period_year), *months[period])
+            elif period_type == 'yearly':
+                query += " AND strftime('%Y', e.date) = ?"
+                params = (user_id, str(period_year))
+            
+            detailed_expenses = db.execute(query, params).fetchall()
+
+            # Query for total expenses by category
+            query = """
+                SELECT mc.category AS category, SUM(e.amount) AS total
+                FROM expenses e
+                LEFT JOIN main_category mc ON e.main_category_id = mc.id
+                WHERE e.user_id = ? AND strftime('%Y', e.date) = ?
+            """
+            if period_type == 'monthly':
+                query += " AND strftime('%m', e.date) = ? GROUP BY mc.category"
+                params = (user_id, str(period_year), str(period).zfill(2))
+            elif period_type == 'quarterly':
+                query += " AND (strftime('%m', e.date) IN (?, ?, ?)) GROUP BY mc.category"
+                params = (user_id, str(period_year), *months[period])
+            elif period_type == 'yearly':
+                query += " GROUP BY mc.category"
+                params = (user_id, str(period_year))
+
+            category_summary = db.execute(query, params).fetchall()
+            column_names_c_summary = [desc[0] for desc in db.execute(query, params).description]
+            category_summary_dict = [dict(zip(column_names_c_summary, row)) for row in category_summary]
+            for row in category_summary_dict:
+                row['total'] = int(row['total'])
+
+            return jsonify(category_summary_dict)
+
+            # Query for total expenses by type
+            query = """
+                SELECT mc.type AS type, SUM(e.amount) AS total
+                FROM expenses e
+                LEFT JOIN main_category mc ON e.main_category_id = mc.id
+                WHERE e.user_id = ? AND strftime('%Y', e.date) = ?
+            """
+            if period_type == 'monthly':
+                query += " AND strftime('%m', e.date) = ? GROUP BY mc.type"
+                params = (user_id, str(period_year), str(period).zfill(2))
+            elif period_type == 'quarterly':
+                query += " AND (strftime('%m', e.date) IN (?, ?, ?)) GROUP BY mc.type"
+                params = (user_id, str(period_year), *months[period])
+            elif period_type == 'yearly':
+                query += " GROUP BY mc.type"
+                params = (user_id, str(period_year))
+
+            type_summary = db.execute(query, params).fetchall()
+
+            # Query for budget
+            budget_query = """
+                SELECT amount
+                FROM budget
+                WHERE user_id = ? AND period_type = ? AND period_year = ?
+            """
+            if period_type != 'yearly':
+                budget_query += " AND period = ?"
+                budget_params = (user_id, period_type, period_year, period)
+            else:
+                budget_params = (user_id, period_type, period_year)
+
+            budget = db.execute(budget_query, budget_params).fetchall()
+            column_names_budget = [desc[0] for desc in db.execute(budget_query, budget_params).description]
+            budget_dict = [dict(zip(column_names_budget, row)) for row in budget]
+            total_budget = budget_dict[0]['amount'] if budget_dict else 0
+            total_budget = float(total_budget)
+            # return jsonify(total_budget)
+            total_expenses = sum(expense['total'] for expense in category_summary)
+            predicted_savings = total_budget - total_expenses
+
+            # return jsonify(predicted_savings)
 
 
-        return render_template("view-expenses.html")
+        #return render_template("view-expenses.html")
     else:
         return render_template("expense-filter.html")
 
@@ -314,7 +415,7 @@ def add_category():
 def add_earning():
     user_id = session["user_id"]
     if request.method == "POST":
-        amount = request.form.get("amount")
+        amount = int(request.form.get("amount"))
         date = request.form.get("date")
         description = request.form.get("description")
         source = request.form.get("source")
@@ -350,7 +451,7 @@ def add_earning():
 def set_budget():
     user_id = session["user_id"]
     if request.method == "POST":
-        amount = request.form.get("amount")
+        amount = int(request.form.get("amount"))
         period_type = request.form.get("period_type")
         period = request.form.get("period")
         period_year = request.form.get("period_year")
