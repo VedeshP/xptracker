@@ -248,7 +248,8 @@ def add_expense():
             sc_rows = [dict(zip(sc_columns, row)) for row in sc]    
             uc = db.execute(uc_query, (user_id,)).fetchall()
             uc_columns = [desc[0] for desc in db.execute(uc_query, (user_id,)).description]
-            uc_rows = [dict(zip(uc_columns, row) for row in uc)]
+            uc_rows = [dict(zip(uc_columns, row)) for row in uc]
+
 
         return render_template("add-expenses.html", uc_rows=uc_rows, mc_rows=mc_rows, sc_rows=sc_rows)
 
@@ -256,7 +257,51 @@ def add_expense():
 @app.route("/view-expenses", methods=["GET", "POST"])
 @login_required
 def view_expenses():
-    ...
+    if request.method == "POST":
+        ...
+        return render_template("view-expenses.html")
+    else:
+        return render_template("expense-filter.html")
+
+
+@app.route("/add-category", methods=["GET", "POST"])
+@login_required
+def add_category():
+    user_id = session["user_id"]
+    if request.method == "POST":
+
+        category = request.form.get("category")
+        description = request.form.get("description")
+        expense_type = request.form.get("type")
+
+        if not category:
+            return apology("Must give category/item", 403)
+        if not description:
+            description = None
+        if not expense_type:
+            return apology("Must specify Expense Type", 403)
+
+        with get_db_connection() as db:
+            try:
+                db.execute("BEGIN")
+                db.execute(
+                    """
+                    INSERT INTO user_category
+                    (user_id, category, description, type)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (user_id, category, description, expense_type)
+                )
+                db.execute("COMMIT")
+            except Exception as e:
+                db.execute("ROLLBACK")
+                return apology(f"An error occured {str(e)}")
+        
+        flash("Category Added")
+        return redirect("/")
+        
+    else:
+        return render_template("add-category.html")
 
 
 @app.route("/add-earning", methods=["GET", "POST"])
@@ -337,6 +382,12 @@ def set_budget():
 @app.route("/know-more")
 def know_more():
     return render_template("know-more.html")
+
+
+@app.route("/analysis", methods=["GET", "POST"])
+@login_required
+def analysis():
+    return render_template("analysis.html")
 
 
 @app.route("/testing")

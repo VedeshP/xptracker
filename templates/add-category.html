@@ -1,8 +1,34 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Add Expenses
+    Add Category
 {% endblock %}
 
 {% block main %}
+<div class="container mt-5">
+    <h2 class="mb-4">Add Custom Category</h2>
+    <form method="post" action="/add-category">
+        <div class="form-group">
+            <label for="category" class="form-label">Category/Item</label>
+            <input type="text" class="form-control" id="category" name="category" placeholder="Enter category (one word only)" required>
+        </div>
+        <div class="form-group">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter description"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="type" class="form-label">Type</label>
+            <select class="form-control" id="type" name="type" required>
+                <option value="" disabled selected>Select type</option>
+                <option value="need">Need</option>
+                <option value="must">Must</option>
+                <option value="want">Want</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Category</button>
+    </form>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 {% endblock %}
