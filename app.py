@@ -35,9 +35,11 @@ def after_request(response):
     return response
 
 
+SQLITECLOUD_DATABASE_URL = os.getenv('SQLC_DB_URL')
+
 @contextmanager
 def get_db_connection():
-    db = sqlitecloud.connect("")
+    db = sqlitecloud.connect(SQLITECLOUD_DATABASE_URL)
     try:
         yield db  # Setup: Provide the connection to the block
     finally:
