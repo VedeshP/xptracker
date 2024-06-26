@@ -586,6 +586,8 @@ h1 {
 h3 {
     color: var(--hover-color) !important;
     padding: 12px;
+    display: flex;
+    align-items: center;
 }
 
 h5 {
