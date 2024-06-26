@@ -29,6 +29,10 @@
 	--switch-bg: #f5f5f6;
 	--switch-circle-bg: #ffd371;
 	--switch-circle-pos: 0.22rem;
+
+    --table-bg: #ffffff;
+    --table-text-color: #000000;
+    --table-border-color: #dddddd;
 }
 
 :root[data-theme="dark"] {
@@ -46,6 +50,10 @@
 	--switch-bg: var(--input-bg);
 	--switch-circle-bg: #8C0CFB;
 	--switch-circle-pos: 2.80rem;
+
+    --table-bg: #444444;
+    --table-text-color: #ffffff;
+    --table-border-color: #555555;
 }
 
 html {
@@ -142,7 +150,8 @@ body {
 
 .offcanvas {
     background-color: var(--page-bg);
-    color: var(--page-bg-opp)
+    color: var(--page-bg-opp);
+    border-radius: 40px;
 }
 
 .nav-link, .navbar-brand, .offcanvas-title, .btn-close, .dropdown-item {
@@ -288,6 +297,43 @@ body {
 /* Ensuring the floating labels also conform to dark theme */
 .form-floating > label {
     color: var(--page-bg-opp);
+}
+
+#categoryChartContainer {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* Adjust the max-width as needed */
+    margin: auto;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+.table th, .table td {
+    white-space: nowrap;
+}
+
+
+.table {
+    background-color: var(--table-bg);
+    color: var(--table-text-color);
+    border: 1px solid var(--table-border-color);
+}
+
+.table th, .table td {
+    border: 1px solid var(--table-border-color);
+}
+
+.table th {
+    background-color: var(--table-bg);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(var(--table-bg-rgb), 0.05); /* Adjust transparency as needed */
+}
+
+.custom-popover .popover-body {
+    color: var(--light-blue); 
 }
 
 .container-custom {

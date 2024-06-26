@@ -302,6 +302,8 @@ def view_expenses():
             column_names_d_e = [desc[0] for desc in db.execute(query, params).description]
             detailed_expenses_dict = [dict(zip(column_names_d_e, row)) for row in detailed_expenses]
 
+            # return jsonify(detailed_expenses_dict)
+
             # Query for total expenses by category
             query = """
                 SELECT category, SUM(amount) AS total FROM (
@@ -337,6 +339,9 @@ def view_expenses():
             category_summary_dict = [dict(zip(column_names_c_summary, row)) for row in category_summary]
             for row in category_summary_dict:
                 row['total'] = int(row['total'])
+            category_summary_dict = [
+                item for item in category_summary_dict if item['category'] is not None
+            ]
 
             # return jsonify(category_summary_dict)
 
@@ -369,7 +374,10 @@ def view_expenses():
             column_names_t_summary = [desc[0] for desc in db.execute(query, params).description]
             type_summary_dict = [dict(zip(column_names_t_summary, row)) for row in type_summary]
 
-            return jsonify(type_summary_dict)
+            for row in type_summary_dict:
+                row['total'] = int(row['total'])
+
+            # return jsonify(type_summary_dict)
 
             # Query for budget
             budget_query = """
@@ -389,13 +397,25 @@ def view_expenses():
             total_budget = budget_dict[0]['amount'] if budget_dict else 0
             total_budget = float(total_budget)
             # return jsonify(total_budget)
-            total_expenses = sum(expense['total'] for expense in category_summary)
-            predicted_savings = total_budget - total_expenses
+            total_expenses = sum(expense['total'] for expense in category_summary_dict)
+            if total_budget != 0:
+                predicted_savings = total_budget - total_expenses
+            else:
+                predicted_savings = "Not applicable as no budget set for this period"
 
             # return jsonify(predicted_savings)
 
 
-        #return render_template("view-expenses.html")
+        return render_template(
+            "view-expenses.html", 
+            detailed_expenses_dict=detailed_expenses_dict,
+            category_summary_dict=category_summary_dict,
+            type_summary_dict=type_summary_dict,
+            predicted_savings=predicted_savings,
+            total_expenses=total_expenses,
+            total_budget=total_budget
+        )
+
     else:
         return render_template("expense-filter.html")
 
