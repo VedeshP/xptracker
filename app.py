@@ -545,6 +545,11 @@ def know_more():
     return render_template("know-more.html")
 
 
+@app.route("/about-us")
+def about_us():
+    return render_template("about-us.html")
+
+
 @app.route("/analysis", methods=["GET", "POST"])
 @login_required
 def analysis():
