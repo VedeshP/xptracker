@@ -345,126 +345,11 @@ body {
     flex-direction: column;
 }
 
-.post {
-    border: 4px solid;
-    border-radius: 12px;
-    border-color: var(--primary-color);
-    width: 100%;
-    max-width: 600px;
-    max-height: 800px;
-    background-color: var(--page-bg);
-    padding: 16px;
-    box-sizing: border-box;
-    overflow-y: auto;
-    margin: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-@media (max-width: 768px) {
-    .post {
-        max-width: 100%;
-    }
-}
-
-@media (min-width: 769px) {
-    .post {
-        max-width: 600px;
-    }
-}
-
-#username-text {
-    padding: 4px;
-}
-
-.post-initial {
-    display: flex;
-    align-items: center;
-    padding: 4px;
-    border: 0px solid;
-    border-color: var(--hover-color);
-    border-bottom-width: 1px;
-}
-
-#follow {
-    margin-left: auto;
-    color: var(--hover-color);
-    padding: 8px;
-}
-
-
-#sub-topic {
-    margin-left: auto;
-}
-
-.post-main {
-    max-width: 600px;
-    max-height: 800px;
-    overflow-y: auto;
-    margin-top: 12px;
-}
-
-.post-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 0px solid;
-    border-color: var(--hover-color);
-    border-top-width: 1px;
-    margin-top: 8px;
-    margin-bottom: -8px;
-}
-
-.post-icon-actions {
-    margin: auto;
-    padding-top: 4px;
-}
-
 .icon {
     fill: var(--page-bg-opp);
     display: inline-flex;
     z-index: 1;
     padding: 4px;
-}
-
-.custom-navbar-bottom {
-    display:flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--page-bg);
-    overflow: hidden;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    height: 64px;
-    border: 0px solid;
-    border-color: var(--hover-color);
-    border-top-width: 1px;
-    margin: auto;
-}  
-
-.custom-navbar-bottom a {
-    float: left;
-    display: block;
-    text-align: center;
-    padding: 14px 16px;
-    margin: auto;
-    transition: 0.3s;
-}
-
-.custom-navbar-bottom a:hover {
-    background-color: var(--primary-color);
-    border-radius: 20px;
-}
-
-.custom-navbar-bottom a.active {
-    background-color:var(--primary-color);
-    border-radius: 20px;
-}
-
-/* New CSS for hiding the navbar */
-.custom-navbar-bottom.hidden {
-    transform: translateY(100%); /* Move the navbar out of view */
-    transition: var(--default-transition);
 }
 
 ::-webkit-scrollbar {
@@ -486,18 +371,6 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #696969;
-}
-
-
-.embed {    
-    border-radius: var(--default-border-radius);
-    padding: 10px;
-    margin: 10px;
-    max-width: 500px; /* Adjust as needed */
-}
-.embed iframe {
-    width: 100%;
-    height: 100%; /* Adjust as needed */
 }
 
 .form-custom {
@@ -621,45 +494,13 @@ h5 {
     height: auto;
 }
 
-.improov-icon {
+.xpt-icon {
     border-radius: var(--default-border-radius);
 }
 
 .action-btn {
     background-color: var(--page-bg);
     border: 0px;
-}
-
-.post-info {
-    color: var(--muted-text-new);
-    justify-content: left;
-    align-items: baseline;
-}
-
-.follow-btn {
-    color: var(--hover-color);
-}
-
-.unfollow-btn {
-    color: var(--hover-color);
-}
-
-/* for user info from here  */
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.user-info h4 {
-    margin: 0;
-}
-
-.user-info h6 {
-    margin: 5px 0 0 0;
 }
 
 /* Ensure action buttons are centered and responsive */
@@ -741,16 +582,6 @@ h5 {
     background-color: var(--page-bg);
     color: var(--hover-color);
     border-color: var(--page-bg);
-}
-
-/* for replies from here  */
-
-.reply-content {
-    border-bottom: solid 4px;
-    border-color: var(--primary-color);
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 12px;
 }
 
 .big-icon {

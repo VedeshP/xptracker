@@ -2,8 +2,6 @@ import os
 import json
 from contextlib import contextmanager
 
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
 from flask import Flask, flash, redirect, render_template, request, session, jsonify, url_for
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -16,15 +14,9 @@ from helpers import login_required, check_password_strength_basic, apology
 
 app = Flask(__name__)
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///xptracker.db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# db = SQLAlchemy(app)
 
 # Get the secret key from an environment variable
-# app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['SECRET_KEY'] = 'trial-secret-key-123'
-# Also add login required deocrator on required routes/functions
-# Add know more, about us and updates templates
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 @app.after_request
 def after_request(response):
