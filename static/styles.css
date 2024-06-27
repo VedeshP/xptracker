@@ -60,6 +60,10 @@ html {
 	font-size: 112.5%; /* 18px */
 }
 
+.xpt-icon {
+    border-radius: var(--default-border-radius);
+}
+
 body {
     background-color: var(--page-bg);
     color: var(--page-bg-opp);
